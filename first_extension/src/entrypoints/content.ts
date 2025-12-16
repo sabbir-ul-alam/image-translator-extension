@@ -95,5 +95,31 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener((msg) => {
       if (msg.type === 'ENTER_SELECTION_MODE') enter();
     });
+
+    browser.runtime.onMessage.addListener((msg) => {
+      if (msg.type === 'DEBUG_IMAGE') {
+        showDebugImage(msg.image);
+      }
+    });
+
+    function showDebugImage(src: string) {
+      const img = document.createElement('img');
+      img.src = src;
+
+      Object.assign(img.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        maxWidth: '300px',
+        border: '2px solid red',
+        zIndex: '2147483647',
+        background: '#fff',
+      });
+
+      document.body.appendChild(img);
+
+      setTimeout(() => img.remove(), 5000);
+    }
+
   },
 });
