@@ -1,6 +1,99 @@
+// export default defineContentScript({
+//   matches: ['*://*.google.com/*'],
+//   main() {
+//     console.log('Hello content.');
+//   },
+// });
+
+import { browser } from 'wxt/browser';
+
 export default defineContentScript({
-  matches: ['*://*.google.com/*'],
+  matches: ['<all_urls>'],
   main() {
-    console.log('Hello content.');
+    let startX = 0;
+    let startY = 0;
+    let box: HTMLDivElement | null = null;
+    let dimmer: HTMLDivElement | null = null;
+
+    const cleanup = () => {
+      box?.remove();
+      dimmer?.remove();
+      box = null;
+      dimmer = null;
+      window.removeEventListener('mousedown', onDown, true);
+      window.removeEventListener('mousemove', onMove, true);
+      window.removeEventListener('mouseup', onUp, true);
+      window.removeEventListener('keydown', onKey, true);
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cleanup();
+    };
+
+    const onDown = (e: MouseEvent) => {
+      startX = e.clientX;
+      startY = e.clientY;
+
+      box = document.createElement('div');
+      Object.assign(box.style, {
+        position: 'fixed',
+        border: '2px solid #00aaff',
+        background: 'rgba(0,170,255,0.15)',
+        zIndex: '2147483647',
+      });
+      document.body.appendChild(box);
+    };
+
+    const onMove = (e: MouseEvent) => {
+      if (!box) return;
+
+      const x = Math.min(e.clientX, startX);
+      const y = Math.min(e.clientY, startY);
+      const w = Math.abs(e.clientX - startX);
+      const h = Math.abs(e.clientY - startY);
+
+      Object.assign(box.style, {
+        left: `${x}px`,
+        top: `${y}px`,
+        width: `${w}px`,
+        height: `${h}px`,
+      });
+    };
+
+    const onUp = () => {
+      if (!box) return;
+
+      const rect = box.getBoundingClientRect();
+      cleanup();
+
+      browser.runtime.sendMessage({
+        type: 'SELECTION_COMPLETE',
+        rect,
+        dpr: window.devicePixelRatio,
+      });
+    };
+
+    const enter = () => {
+      console.log('hello content script');
+      cleanup();
+      dimmer = document.createElement('div');
+      Object.assign(dimmer.style, {
+        position: 'fixed',
+        inset: '0',
+        background: 'rgba(0,0,0,0.25)',
+        cursor: 'crosshair',
+        zIndex: '2147483646',
+      });
+      document.body.appendChild(dimmer);
+
+      window.addEventListener('mousedown', onDown, true);
+      window.addEventListener('mousemove', onMove, true);
+      window.addEventListener('mouseup', onUp, true);
+      window.addEventListener('keydown', onKey, true);
+    };
+
+    browser.runtime.onMessage.addListener((msg) => {
+      if (msg.type === 'ENTER_SELECTION_MODE') enter();
+    });
   },
 });

@@ -35,6 +35,7 @@ document.getElementById('select')!.addEventListener('click', async () => {
     type: 'START_SELECTION',
     tabId: tab.id,
   });
+  console.log('Hello main!');
 
-  window.close();
+  // window.close();
 });

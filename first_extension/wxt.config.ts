@@ -8,5 +8,10 @@ export default defineConfig({
           description: 'Select an area, Ocr it, translate it',
           permissions: ['activeTab','scripting','storage'],
           host_permissions:['<all_urls>'],
+     },
+     dev:{
+          server:{
+               port: 3000
+          }
      }
 });
