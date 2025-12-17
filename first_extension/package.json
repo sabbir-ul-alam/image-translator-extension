@@ -17,5 +17,8 @@
   "devDependencies": {
     "typescript": "^5.9.2",
     "wxt": "^0.20.6"
+  },
+  "dependencies": {
+    "tesseract.js": "^7.0.0"
   }
 }

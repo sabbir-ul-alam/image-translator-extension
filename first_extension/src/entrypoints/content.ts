@@ -96,30 +96,61 @@ export default defineContentScript({
       if (msg.type === 'ENTER_SELECTION_MODE') enter();
     });
 
+    // browser.runtime.onMessage.addListener((msg) => {
+    //   if (msg.type === 'DEBUG_IMAGE') {
+    //     showDebugImage(msg.image);
+    //   }
+    // });
+
+    // function showDebugImage(src: string) {
+    //   const img = document.createElement('img');
+    //   img.src = src;
+
+    //   Object.assign(img.style, {
+    //     position: 'fixed',
+    //     top: '20px',
+    //     right: '20px',
+    //     maxWidth: '300px',
+    //     border: '2px solid red',
+    //     zIndex: '2147483647',
+    //     background: '#fff',
+    //   });
+
+    //   document.body.appendChild(img);
+
+    //   setTimeout(() => img.remove(), 5000);
+    // }
+
     browser.runtime.onMessage.addListener((msg) => {
-      if (msg.type === 'DEBUG_IMAGE') {
-        showDebugImage(msg.image);
+      if (msg.type === 'OCR_RESULT') {
+        showTextOverlay(msg.text);
       }
     });
 
-    function showDebugImage(src: string) {
-      const img = document.createElement('img');
-      img.src = src;
+    function showTextOverlay(text: string) {
+      const box = document.createElement('div');
 
-      Object.assign(img.style, {
+      Object.assign(box.style, {
         position: 'fixed',
-        top: '20px',
+        bottom: '20px',
         right: '20px',
-        maxWidth: '300px',
-        border: '2px solid red',
+        maxWidth: '320px',
+        padding: '12px',
+        background: 'rgba(0,0,0,0.8)',
+        color: '#fff',
+        fontSize: '14px',
+        lineHeight: '1.4',
+        borderRadius: '8px',
         zIndex: '2147483647',
-        background: '#fff',
       });
 
-      document.body.appendChild(img);
+      box.textContent = text;
+      document.body.appendChild(box);
 
-      setTimeout(() => img.remove(), 5000);
+      setTimeout(() => box.remove(), 6000);
     }
+
+
 
   },
 });
