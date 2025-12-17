@@ -4,6 +4,10 @@
 
 import { browser } from 'wxt/browser';
 import{ cropImage } from '../lib/capture/cropImage';
+import { FakeOCR } from '../lib/ocr/fakeOcr';
+
+const ocr = new FakeOCR();
+
 
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener(async (msg, sender) => {
@@ -23,19 +27,19 @@ export default defineBackground(() => {
       if (!tabId) return;
 
       // 1️⃣ Capture screenshot
-      const imageDataUrl = await browser.tabs.captureVisibleTab({
+      const screenshot = await browser.tabs.captureVisibleTab({
         format: 'png',
       });
 
       // 2️⃣ Crop image
       const cropped = await cropImage(
-        imageDataUrl,
+        screenshot,
         msg.rect,
         msg.dpr
       );
 
       // 3️⃣ Send cropped image text back
-      const text = await fakeOCR(cropped);
+      const text = await ocr.recognize(cropped);
 
       browser.tabs.sendMessage(tabId, {
         type: 'OCR_RESULT',
@@ -47,21 +51,5 @@ export default defineBackground(() => {
 
 
   });
-
-
-
-
-  async function fakeOCR(_: string): Promise<string> {
-    // Simulate network + processing delay
-    await new Promise(r => setTimeout(r, 800));
-
-    return `Detected text (stub OCR)
-
-This is placeholder text.
-Next step will replace this with real OCR output.`;
-  }
-
-
-
 
 });
