@@ -4,9 +4,8 @@
 
 import { browser } from 'wxt/browser';
 import{ cropImage } from '../lib/capture/cropImage';
-import { FakeOCR } from '../lib/ocr/fakeOcr';
-
-const ocr = new FakeOCR();
+import { TesseractOCR } from '../lib/ocr/tesseractOcr';
+const ocr = new TesseractOCR();
 
 
 export default defineBackground(() => {
@@ -46,9 +45,6 @@ export default defineBackground(() => {
         text,
       });
     }
-
-
-
 
   });
 
