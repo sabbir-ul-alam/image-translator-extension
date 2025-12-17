@@ -8,6 +8,7 @@
 import { browser } from 'wxt/browser';
 import { recognizeText } from '../lib/ocr/tesseractClient';
 import { translateText } from '../lib/translate/translateClient';
+import { showTranslationOverlay } from '../lib/ui/translationOverlay';
 
 
 export default defineContentScript({
@@ -106,7 +107,7 @@ export default defineContentScript({
 
       if (msg.type === 'OCR_RESULT') {
         removeLoadingOverlay();
-        showTextOverlay(msg.text);
+        showTranslationOverlay(msg.text, { opacity: 0.85, fontSizePx: 14 });
       }
     });
 
@@ -123,8 +124,8 @@ export default defineContentScript({
           // const translated = ocrText;
 
           removeLoadingOverlay();
-          showTextOverlay(translated || 'No translation available');
-        } catch (err) {
+          showTranslationOverlay(translated || 'No translation available', { opacity: 0.85, fontSizePx: 14 });
+      } catch (err) {
           removeLoadingOverlay();
           showTextOverlay('Translation failed');
           console.error(err);
