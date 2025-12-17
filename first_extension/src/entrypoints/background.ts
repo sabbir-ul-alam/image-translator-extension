@@ -12,8 +12,8 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.type === 'START_SELECTION') {
 
-      console.log('msg=', msg);
-      console.log('sender=', sender);
+      // console.log('msg=', msg);
+      // console.log('sender=', sender);
       browser.tabs.sendMessage(msg.tabId, {
         type: 'ENTER_SELECTION_MODE',
       });
@@ -22,7 +22,7 @@ export default defineBackground(() => {
 
     if (msg.type === 'SELECTION_COMPLETE') {
       const tabId = sender.tab?.id;
-      console.log('senderTabId=', tabId);
+      // console.log('senderTabId=', tabId);
       if (!tabId) return;
 
       // 1️⃣ Capture screenshot

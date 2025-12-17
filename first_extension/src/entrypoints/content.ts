@@ -7,6 +7,7 @@
 
 import { browser } from 'wxt/browser';
 import { recognizeText } from '../lib/ocr/tesseractClient';
+import { translateText } from '../lib/translate/translateClient';
 
 
 export default defineContentScript({
@@ -112,19 +113,25 @@ export default defineContentScript({
 
     browser.runtime.onMessage.addListener(async (msg) => {
       if (msg.type === 'CROPPED_IMAGE') {
-        showLoadingOverlay();
+        showLoadingOverlay('Extracting text…');
 
         try {
-          const text = await recognizeText(msg.image);
+          const ocrText = await recognizeText(msg.image);
+
+          showLoadingOverlay('Translating…');
+          const translated = await translateText(ocrText, 'en');
+          // const translated = ocrText;
+
           removeLoadingOverlay();
-          showTextOverlay(text || 'No text detected');
+          showTextOverlay(translated || 'No translation available');
         } catch (err) {
           removeLoadingOverlay();
-          showTextOverlay('OCR failed');
+          showTextOverlay('Translation failed');
           console.error(err);
         }
       }
     });
+
 
 
     function showTextOverlay(text: string) {
@@ -154,26 +161,26 @@ export default defineContentScript({
 
     let loadingEl: HTMLDivElement | null = null;
 
-    function showLoadingOverlay() {
-      if (loadingEl) return;
+    function showLoadingOverlay(message = 'Processing…') {
+      if (!loadingEl) {
+        loadingEl = document.createElement('div');
+        Object.assign(loadingEl.style, {
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '10px 14px',
+          background: 'rgba(0,0,0,0.7)',
+          color: '#fff',
+          borderRadius: '6px',
+          fontSize: '13px',
+          zIndex: '2147483647',
+        });
+        document.body.appendChild(loadingEl);
+      }
 
-      loadingEl = document.createElement('div');
-      loadingEl.textContent = 'Extracting text…';
-
-      Object.assign(loadingEl.style, {
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        padding: '10px 14px',
-        background: 'rgba(0,0,0,0.7)',
-        color: '#fff',
-        borderRadius: '6px',
-        fontSize: '13px',
-        zIndex: '2147483647',
-      });
-
-      document.body.appendChild(loadingEl);
+      loadingEl.textContent = message;
     }
+
 
     function removeLoadingOverlay() {
       loadingEl?.remove();
