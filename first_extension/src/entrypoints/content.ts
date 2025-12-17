@@ -6,6 +6,8 @@
 // });
 
 import { browser } from 'wxt/browser';
+import { recognizeText } from '../lib/ocr/tesseractClient';
+
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -96,36 +98,34 @@ export default defineContentScript({
       if (msg.type === 'ENTER_SELECTION_MODE') enter();
     });
 
-    // browser.runtime.onMessage.addListener((msg) => {
-    //   if (msg.type === 'DEBUG_IMAGE') {
-    //     showDebugImage(msg.image);
-    //   }
-    // });
-
-    // function showDebugImage(src: string) {
-    //   const img = document.createElement('img');
-    //   img.src = src;
-
-    //   Object.assign(img.style, {
-    //     position: 'fixed',
-    //     top: '20px',
-    //     right: '20px',
-    //     maxWidth: '300px',
-    //     border: '2px solid red',
-    //     zIndex: '2147483647',
-    //     background: '#fff',
-    //   });
-
-    //   document.body.appendChild(img);
-
-    //   setTimeout(() => img.remove(), 5000);
-    // }
-
     browser.runtime.onMessage.addListener((msg) => {
+      if (msg.type === 'PROCESSING_STARTED') {
+        showLoadingOverlay();
+      }
+
       if (msg.type === 'OCR_RESULT') {
+        removeLoadingOverlay();
         showTextOverlay(msg.text);
       }
     });
+
+
+    browser.runtime.onMessage.addListener(async (msg) => {
+      if (msg.type === 'CROPPED_IMAGE') {
+        showLoadingOverlay();
+
+        try {
+          const text = await recognizeText(msg.image);
+          removeLoadingOverlay();
+          showTextOverlay(text || 'No text detected');
+        } catch (err) {
+          removeLoadingOverlay();
+          showTextOverlay('OCR failed');
+          console.error(err);
+        }
+      }
+    });
+
 
     function showTextOverlay(text: string) {
       const box = document.createElement('div');
@@ -150,6 +150,35 @@ export default defineContentScript({
       setTimeout(() => box.remove(), 6000);
     }
 
+
+
+    let loadingEl: HTMLDivElement | null = null;
+
+    function showLoadingOverlay() {
+      if (loadingEl) return;
+
+      loadingEl = document.createElement('div');
+      loadingEl.textContent = 'Extracting text…';
+
+      Object.assign(loadingEl.style, {
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        padding: '10px 14px',
+        background: 'rgba(0,0,0,0.7)',
+        color: '#fff',
+        borderRadius: '6px',
+        fontSize: '13px',
+        zIndex: '2147483647',
+      });
+
+      document.body.appendChild(loadingEl);
+    }
+
+    function removeLoadingOverlay() {
+      loadingEl?.remove();
+      loadingEl = null;
+    }
 
 
   },

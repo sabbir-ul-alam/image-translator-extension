@@ -3,7 +3,7 @@
 // });
 
 import { browser } from 'wxt/browser';
-import{ cropImage } from '../lib/capture/cropImage';
+import { cropImage } from '../lib/capture/cropImage';
 import { TesseractOCR } from '../lib/ocr/tesseractOcr';
 const ocr = new TesseractOCR();
 
@@ -37,13 +37,23 @@ export default defineBackground(() => {
         msg.dpr
       );
 
-      // 3️⃣ Send cropped image text back
-      const text = await ocr.recognize(cropped);
+      browser.tabs.sendMessage(tabId, {
+        type: 'PROCESSING_STARTED',
+      });
+
+      // // 3️⃣ Send cropped image text back
+      // const text = await ocr.recognize(cropped);
+
+      // browser.tabs.sendMessage(tabId, {
+      //   type: 'OCR_RESULT',
+      //   text,
+      // });
 
       browser.tabs.sendMessage(tabId, {
-        type: 'OCR_RESULT',
-        text,
+        type: 'CROPPED_IMAGE',
+        image: cropped,
       });
+
     }
 
   });
