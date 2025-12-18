@@ -9,10 +9,26 @@ const ocr = new TesseractOCR();
 
 
 export default defineBackground(() => {
+
+  browser.commands.onCommand.addListener(async (command) => {
+    if (command === 'START_SELECTION') {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tab?.id) return;
+
+      browser.tabs.sendMessage(tab.id, {
+        type: 'ENTER_SELECTION_MODE',
+      });
+    }
+  });
+
   browser.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.type === 'START_SELECTION') {
 
-      // console.log('msg=', msg);
+      console.log('msg=', msg);
       // console.log('sender=', sender);
       browser.tabs.sendMessage(msg.tabId, {
         type: 'ENTER_SELECTION_MODE',
