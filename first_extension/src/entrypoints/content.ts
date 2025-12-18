@@ -9,6 +9,7 @@ import { browser } from 'wxt/browser';
 import { recognizeText } from '../lib/ocr/tesseractClient';
 import { translateText } from '../lib/translate/translateClient';
 import { showTranslationOverlay } from '../lib/ui/translationOverlay';
+import { getSettings } from '../lib/settings/settings';
 
 
 export default defineContentScript({
@@ -120,8 +121,8 @@ export default defineContentScript({
           const ocrText = await recognizeText(msg.image);
 
           showLoadingOverlay('Translating…');
-          const translated = await translateText(ocrText, 'en');
-          // const translated = ocrText;
+const { targetLang } = await getSettings();
+const translated = await translateText(ocrText, targetLang);          // const translated = ocrText;
 
           removeLoadingOverlay();
           showTranslationOverlay(translated || 'No translation available', { opacity: 0.85, fontSizePx: 14 });
