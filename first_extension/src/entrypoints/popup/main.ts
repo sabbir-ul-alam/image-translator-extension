@@ -24,6 +24,27 @@
 // setupCounter(document.querySelector<HTMLButtonElement>('#counter')!);
 
 import { browser } from 'wxt/browser';
+import { getSettings, saveSettings } from '../../lib/settings/settings';
+
+const fromSelect = document.getElementById('from') as HTMLSelectElement;
+const toSelect = document.getElementById('to') as HTMLSelectElement;
+const selectBtn = document.getElementById('select')!;
+
+
+// Load saved values
+(async () => {
+  const settings = await getSettings();
+  fromSelect.value = settings.sourceLang;
+  toSelect.value = settings.targetLang;
+})();
+
+fromSelect.addEventListener('change', () => {
+  saveSettings({ sourceLang: fromSelect.value });
+});
+
+toSelect.addEventListener('change', () => {
+  saveSettings({ targetLang: toSelect.value });
+});
 
 document.getElementById('select')!.addEventListener('click', async () => {
   const [tab] = await browser.tabs.query({
@@ -37,5 +58,5 @@ document.getElementById('select')!.addEventListener('click', async () => {
   });
   console.log('Hello main!');
 
-  // window.close();
+  window.close();
 });

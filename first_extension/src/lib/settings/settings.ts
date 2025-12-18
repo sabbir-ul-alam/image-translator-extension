@@ -1,10 +1,12 @@
 import { browser } from 'wxt/browser';
 
 export type UserSettings = {
+  sourceLang: string;  // 'auto', 'en', 'fr', etc.
   targetLang: string;
 };
 
 const DEFAULT_SETTINGS: UserSettings = {
+  sourceLang: 'auto',
   targetLang: 'en',
 };
 

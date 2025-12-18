@@ -1,24 +1,34 @@
-<!-- <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Default Popup Title</title>
-    <meta name="manifest.type" content="browser_action" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="./main.ts"></script>
-  </body>
-</html> -->
-
-
 <!DOCTYPE html>
 <html>
   <body>
     <h3>Image Translator</h3>
+
+    <label>
+      Translate from:
+      <select id="from">
+        <option value="auto">Auto detect</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+      </select>
+    </label>
+
+    <label>
+      Translate to:
+      <select id="to">
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+        <option value="bn">Bengali</option>
+      </select>
+  </label>
+
     <button id="select">Select Area</button>
-    <p>Press ESC to cancel</p>
+
     <script type="module" src="main.ts"></script>
   </body>
 </html>

@@ -1,13 +1,15 @@
 export async function translateText(
   text: string,
+  sourceLang: string,
   targetLang: string
 ): Promise<string> {
 //   const encoded = encodeURIComponent(text);
   console.log('Translating text:', text);
+  const langPair = `${sourceLang}|${targetLang}`;
 
 //   return "test translation";
 //   const url = `https://api.mymemory.translated.net/get?q=${encoded}&langpair=DE|${targetLang}`;
-  const url = `https://api.mymemory.translated.net/get?q=${text}&langpair=DE|${targetLang}`;
+  const url = `https://api.mymemory.translated.net/get?q=${text}&langpair=${langPair}`;
 
   const res = await fetch(url);
 

@@ -121,12 +121,13 @@ export default defineContentScript({
           const ocrText = await recognizeText(msg.image);
 
           showLoadingOverlay('Translating…');
-const { targetLang } = await getSettings();
-const translated = await translateText(ocrText, targetLang);          // const translated = ocrText;
+          const settings = await getSettings();
+          const translated = await translateText(
+            ocrText,settings.sourceLang, settings.targetLang);          // const translated = ocrText;
 
           removeLoadingOverlay();
           showTranslationOverlay(translated || 'No translation available', { opacity: 0.85, fontSizePx: 14 });
-      } catch (err) {
+        } catch (err) {
           removeLoadingOverlay();
           showTextOverlay('Translation failed');
           console.error(err);
