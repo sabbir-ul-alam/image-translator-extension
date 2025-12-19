@@ -68,6 +68,7 @@ export default defineBackground(() => {
       browser.tabs.sendMessage(tabId, {
         type: 'CROPPED_IMAGE',
         image: cropped,
+        rect: msg.rect,
       });
 
     }

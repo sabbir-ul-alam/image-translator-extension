@@ -10,6 +10,11 @@ import { recognizeText } from '../lib/ocr/tesseractClient';
 import { translateText } from '../lib/translate/translateClient';
 import { showTranslationOverlay } from '../lib/ui/translationOverlay';
 import { getSettings } from '../lib/settings/settings';
+import { showImageTranslationOverlay } from '../lib/ui/imageTranslationOverlay';
+
+
+import { recognizeLines } from '../lib/ocr/tesseractLines';
+import { renderTranslatedImage } from '../lib/render/renderTranslatedImage';
 
 
 export default defineContentScript({
@@ -97,36 +102,57 @@ export default defineContentScript({
       window.addEventListener('keydown', onKey, true);
     };
 
-    browser.runtime.onMessage.addListener((msg) => {
+    browser.runtime.onMessage.addListener(async(msg) => {
       if (msg.type === 'ENTER_SELECTION_MODE') enter();
-    });
 
-    browser.runtime.onMessage.addListener((msg) => {
       if (msg.type === 'PROCESSING_STARTED') {
         showLoadingOverlay();
       }
 
-      if (msg.type === 'OCR_RESULT') {
-        removeLoadingOverlay();
-        showTranslationOverlay(msg.text, { opacity: 0.85, fontSizePx: 14 });
-      }
-    });
-
-
-    browser.runtime.onMessage.addListener(async (msg) => {
+      // if (msg.type === 'OCR_RESULT') {
+      //   removeLoadingOverlay();
+      //   showTranslationOverlay(msg.text, { opacity: 0.85, fontSizePx: 14 });
+      // }
       if (msg.type === 'CROPPED_IMAGE') {
         showLoadingOverlay('Extracting text…');
 
         try {
-          const ocrText = await recognizeText(msg.image);
+          const settings = await getSettings();
+
+          const ocr = await recognizeLines(msg.image);
+
+          if (!ocr.lines.length) {
+            removeLoadingOverlay();
+            // fall back to your movable overlay if you want
+            showTextOverlay('No text found in the selected area');
+            return;
+          }
 
           showLoadingOverlay('Translating…');
-          const settings = await getSettings();
-          const translated = await translateText(
-            ocrText,settings.sourceLang, settings.targetLang);          // const translated = ocrText;
+
+          // Translate each line (simple MVP)
+          const translatedLines = [];
+          for (const line of ocr.lines) {
+            const translated = await translateText(
+              line.text,
+              settings.sourceLang,
+              settings.targetLang
+            );
+            translatedLines.push({ box: line.box, translated });
+          }
+
+          console.log('translatedLines=', translatedLines);
+
+          showLoadingOverlay('Rendering…');
+
+          const renderedImage = await renderTranslatedImage(msg.image, translatedLines);
 
           removeLoadingOverlay();
-          showTranslationOverlay(translated || 'No translation available', { opacity: 0.85, fontSizePx: 14 });
+
+          showRenderedImageOverlay(
+            renderedImage,
+            msg.rect);
+
         } catch (err) {
           removeLoadingOverlay();
           showTextOverlay('Translation failed');
@@ -189,6 +215,40 @@ export default defineContentScript({
       loadingEl?.remove();
       loadingEl = null;
     }
+
+    function showRenderedImageOverlay(imageBase64: string, rect: DOMRect) {
+      document.getElementById('__translated_image_overlay__')?.remove();
+
+      const container = document.createElement('div');
+      container.id = '__translated_image_overlay__';
+
+      Object.assign(container.style, {
+        position: 'fixed',
+        left: `${rect.x}px`,
+        top: `${rect.y}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        zIndex: '2147483647',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.35)',
+        background: '#000',
+      });
+
+      const img = document.createElement('img');
+      img.src = imageBase64;
+
+      Object.assign(img.style, {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        display: 'block',
+      });
+
+      container.appendChild(img);
+      document.body.appendChild(container);
+    }
+
 
 
   },
