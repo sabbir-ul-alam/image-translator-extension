@@ -11,9 +11,10 @@ import { translateText } from '../lib/translate/translateClient';
 import { showTranslationOverlay } from '../lib/ui/translationOverlay';
 import { getSettings } from '../lib/settings/settings';
 import { showImageTranslationOverlay } from '../lib/ui/imageTranslationOverlay';
+import { extractLinesFromBlocks } from '../lib/ocr/extractLinesFromBlocks';
 
 
-import { recognizeLines } from '../lib/ocr/tesseractLines';
+import { recognizeWithBlocks as recognizeWithBlocks } from '../lib/ocr/tesseractLines';
 import { renderTranslatedImage } from '../lib/render/renderTranslatedImage';
 
 
@@ -119,9 +120,9 @@ export default defineContentScript({
         try {
           const settings = await getSettings();
 
-          const ocr = await recognizeLines(msg.image);
-
-          if (!ocr.lines.length) {
+          const ocrResult = await recognizeWithBlocks(msg.image);
+          const lines = extractLinesFromBlocks(ocrResult.blocks);
+          if (!lines.length) {
             removeLoadingOverlay();
             // fall back to your movable overlay if you want
             showTextOverlay('No text found in the selected area');
@@ -132,7 +133,7 @@ export default defineContentScript({
 
           // Translate each line (simple MVP)
           const translatedLines = [];
-          for (const line of ocr.lines) {
+          for (const line of lines) {
             const translated = await translateText(
               line.text,
               settings.sourceLang,
