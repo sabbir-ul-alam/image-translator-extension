@@ -33,11 +33,11 @@ export async function renderTranslatedImage(
     ctx.restore();
 
     // Dim slightly for readability
-    ctx.save();
-    ctx.globalAlpha = 0.45;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(x0, y0, w, h);
-    ctx.restore();
+    // ctx.save();
+    // ctx.globalAlpha = 0.45;
+    // ctx.fillStyle = '#000';
+    // ctx.fillRect(x0, y0, w, h);
+    // ctx.restore();
 
 
     // Fit font size to box height

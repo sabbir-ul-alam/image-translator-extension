@@ -48,7 +48,7 @@ export default defineContentScript({
       box = document.createElement('div');
       Object.assign(box.style, {
         position: 'fixed',
-        border: '2px solid #00aaff',
+        //dborder: '2px solid #00aaff',
         background: 'rgba(0,170,255,0.15)',
         zIndex: '2147483647',
       });
@@ -239,8 +239,12 @@ export default defineContentScript({
         overflow: 'hidden',
         borderRadius: '8px',
         boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
-        background: '#000',
+        background: 'transparent',
+        cursor: 'move',
+
       });
+
+
 
       const img = document.createElement('img');
       img.src = imageBase64;
@@ -248,11 +252,63 @@ export default defineContentScript({
       img.style.height = '100%';
       img.style.display = 'block';
 
+
       container.appendChild(img);
       document.body.appendChild(container);
 
+      addEscToClose(container, () => {
+        applyExitAnimation(container, () => {
+          container.remove();
+        });
+      });
+
+
+
+
       applyEnterAnimation(container);
+      // makeDraggable(container, header);
+      makeDraggable(container, container);
+
+
     }
+
+    function makeDraggable(container: HTMLElement, handle: HTMLElement) {
+      let dragging = false;
+      let startX = 0;
+      let startY = 0;
+      let startLeft = 0;
+      let startTop = 0;
+
+      handle.addEventListener('mousedown', (e) => {
+        dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        const rect = container.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        const nextLeft = Math.max(0, startLeft + dx);
+        const nextTop = Math.max(0, startTop + dy);
+
+        container.style.left = `${nextLeft}px`;
+        container.style.top = `${nextTop}px`;
+      });
+
+      window.addEventListener('mouseup', () => {
+        dragging = false;
+      });
+    }
+
 
 
     function applyEnterAnimation(el: HTMLElement) {
@@ -284,6 +340,23 @@ export default defineContentScript({
 
       anim.onfinish = onDone;
     }
+
+    function addEscToClose(
+      container: HTMLElement,
+      onClose: () => void
+    ) {
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          onClose();
+          window.removeEventListener('keydown', onKeyDown, true);
+        }
+      };
+
+      // Use capture phase so we catch ESC reliably
+      window.addEventListener('keydown', onKeyDown, true);
+    }
+
 
 
 
