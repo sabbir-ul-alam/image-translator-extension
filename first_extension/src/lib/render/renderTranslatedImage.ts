@@ -1,8 +1,6 @@
-import type { OCRLine } from '../ocr/ocrTypes';
-
 export async function renderTranslatedImage(
   imageBase64: string,
-  lines: Array<{ box: OCRLine['box']; translated: string }>
+  lines: Array<{ box: { x0: number; y0: number; x1: number; y1: number }; translated: string }>
 ): Promise<string> {
   const img = await loadImage(imageBase64);
 
@@ -13,26 +11,24 @@ export async function renderTranslatedImage(
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
 
-  // Paint and write translated text per line
   for (const item of lines) {
     const { x0, y0, x1, y1 } = item.box;
     const w = Math.max(1, x1 - x0);
     const h = Math.max(1, y1 - y0);
 
-    // Cover original text area
+    // Cover original text
     ctx.save();
-    ctx.globalAlpha = 0.75;
+    ctx.globalAlpha = 0.85;
     ctx.fillStyle = '#000';
     ctx.fillRect(x0, y0, w, h);
     ctx.restore();
 
-    // Fit text to box height (simple heuristic)
-    const fontSize = Math.max(10, Math.floor(h * 0.7));
+    // Fit font size to box height
+    const fontSize = Math.max(10, Math.floor(h * 0.75));
     ctx.font = `${fontSize}px Arial`;
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'top';
 
-    // Basic wrapping within the rectangle
     drawWrappedText(ctx, item.translated, x0 + 4, y0 + 2, w - 8, h - 4);
   }
 
@@ -57,19 +53,17 @@ function drawWrappedText(
   maxHeight: number
 ) {
   const words = text.split(/\s+/);
-  const lineHeight = Math.ceil(parseInt(ctx.font, 10) * 1.1);
+  const lineHeight = Math.ceil(parseInt(ctx.font, 10) * 1.15);
 
   let line = '';
   let yy = y;
 
-  for (let i = 0; i < words.length; i++) {
-    const test = line ? `${line} ${words[i]}` : words[i];
-    const w = ctx.measureText(test).width;
-
-    if (w > maxWidth && line) {
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
       if (yy + lineHeight > y + maxHeight) break;
       ctx.fillText(line, x, yy);
-      line = words[i];
+      line = word;
       yy += lineHeight;
     } else {
       line = test;
