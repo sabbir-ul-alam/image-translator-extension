@@ -16,16 +16,33 @@ export async function renderTranslatedImage(
     const w = Math.max(1, x1 - x0);
     const h = Math.max(1, y1 - y0);
 
-    // Cover original text
+    // Blur background text region
     ctx.save();
-    ctx.globalAlpha = 0.85;
+    ctx.filter = 'blur(4px)';
+    ctx.drawImage(
+      img,
+      x0,
+      y0,
+      w,
+      h,
+      x0,
+      y0,
+      w,
+      h
+    );
+    ctx.restore();
+
+    // Dim slightly for readability
+    ctx.save();
+    ctx.globalAlpha = 0.45;
     ctx.fillStyle = '#000';
     ctx.fillRect(x0, y0, w, h);
     ctx.restore();
 
+
     // Fit font size to box height
     const fontSize = Math.max(10, Math.floor(h * 0.75));
-    ctx.font = `${fontSize}px Arial`;
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif`;
     ctx.fillStyle = '#fff';
     ctx.textBaseline = 'top';
 

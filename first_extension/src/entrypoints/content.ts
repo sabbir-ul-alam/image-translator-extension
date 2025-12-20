@@ -103,8 +103,13 @@ export default defineContentScript({
       window.addEventListener('keydown', onKey, true);
     };
 
-    browser.runtime.onMessage.addListener(async(msg) => {
-      if (msg.type === 'ENTER_SELECTION_MODE') enter();
+    browser.runtime.onMessage.addListener(async (msg) => {
+      if (msg.type === 'ENTER_SELECTION_MODE') {
+        const existing = document.getElementById('__translated_image_overlay__');
+        if (existing) existing.remove();
+        enter();
+
+      }
 
       if (msg.type === 'PROCESSING_STARTED') {
         showLoadingOverlay();
@@ -218,7 +223,8 @@ export default defineContentScript({
     }
 
     function showRenderedImageOverlay(imageBase64: string, rect: DOMRect) {
-      document.getElementById('__translated_image_overlay__')?.remove();
+      const existing = document.getElementById('__translated_image_overlay__');
+      if (existing) existing.remove();
 
       const container = document.createElement('div');
       container.id = '__translated_image_overlay__';
@@ -230,25 +236,55 @@ export default defineContentScript({
         width: `${rect.width}px`,
         height: `${rect.height}px`,
         zIndex: '2147483647',
-        borderRadius: '6px',
         overflow: 'hidden',
-        boxShadow: '0 6px 24px rgba(0,0,0,0.35)',
+        borderRadius: '8px',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
         background: '#000',
       });
 
       const img = document.createElement('img');
       img.src = imageBase64;
-
-      Object.assign(img.style, {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-        display: 'block',
-      });
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.display = 'block';
 
       container.appendChild(img);
       document.body.appendChild(container);
+
+      applyEnterAnimation(container);
     }
+
+
+    function applyEnterAnimation(el: HTMLElement) {
+      el.animate(
+        [
+          { opacity: 0, transform: 'scale(0.96)' },
+          { opacity: 1, transform: 'scale(1)' }
+        ],
+        {
+          duration: 160,
+          easing: 'cubic-bezier(0.2, 0, 0, 1)',
+          fill: 'forwards',
+        }
+      );
+    }
+
+    function applyExitAnimation(el: HTMLElement, onDone: () => void) {
+      const anim = el.animate(
+        [
+          { opacity: 1, transform: 'scale(1)' },
+          { opacity: 0, transform: 'scale(0.96)' }
+        ],
+        {
+          duration: 120,
+          easing: 'cubic-bezier(0.4, 0, 1, 1)',
+          fill: 'forwards',
+        }
+      );
+
+      anim.onfinish = onDone;
+    }
+
 
 
 
